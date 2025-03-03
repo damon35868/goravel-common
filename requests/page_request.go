@@ -36,3 +36,7 @@ func (r *PageRequest) Attributes(ctx http.Context) map[string]string {
 func (r *PageRequest) PrepareForValidation(ctx http.Context, data validation.Data) error {
 	return nil
 }
+
+func (r *PageRequest) GetPageInfo() (int, int) {
+	return r.Page, r.PageSize
+}
