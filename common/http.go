@@ -1,7 +1,9 @@
 package common
 
 import (
+	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/damon35868/goravel-common/errorx"
 
@@ -79,4 +81,28 @@ func ValidateRequest(ctx http.Context, val http.FormRequest) http.Response {
 		return errorx.HttpExceptionAndData(ctx, http.StatusBadRequest, errors.All())
 	}
 	return nil
+}
+
+/**
+ * @description: SSO单点登录
+ * @param {int64} id
+ * @param {string} token
+ * @return {*}
+ */
+func SSOLogin(id int64, token string) {
+	config := facades.Config()
+	ssoKey := config.Get("jwt.sso_key")
+	ttl := config.GetInt("jwt.ttl")
+	facades.Cache().Put(ssoKey.(string)+fmt.Sprintf(":%d", id), token, time.Duration(ttl)*time.Second)
+}
+
+/**
+ * @description: SSO单点登录-登出
+ * @param {int64} id
+ * @return {*}
+ */
+func SSOLogout(id int64) {
+	config := facades.Config()
+	ssoKey := config.Get("jwt.sso_key")
+	facades.Cache().Forget(ssoKey.(string) + fmt.Sprintf(":%d", id))
 }

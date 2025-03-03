@@ -2,53 +2,82 @@ package middleware
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/goravel/framework/auth"
 	contractshttp "github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/facades"
 )
 
-func Jwt() contractshttp.Middleware {
+func Jwt(messageMaps ...map[string]string) contractshttp.Middleware {
+	var (
+		missingTokenMsg = "未携带token"
+		ssoMsg          = "当前账号已在其他地方登录，请重新登录～"
+		refreshMsg      = "token续期失败，请重新登录～"
+		expiredMsg      = "token过期，请重新登录～"
+	)
+	if len(messageMaps) > 0 {
+		msgMap := messageMaps[0]
+		if msgMap["missingTokenMsg"] != "" {
+			missingTokenMsg = msgMap["missingTokenMsg"]
+		}
+		if msgMap["ssoMsg"] != "" {
+			ssoMsg = msgMap["ssoMsg"]
+		}
+		if msgMap["refreshMsg"] != "" {
+			refreshMsg = msgMap["refreshMsg"]
+		}
+		if msgMap["expiredMsg"] != "" {
+			expiredMsg = msgMap["expiredMsg"]
+		}
+	}
+
 	return func(ctx contractshttp.Context) {
 		token := ctx.Request().Header("Authorization", "")
 		if token == "" {
 			ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
 				"code":    http.StatusUnauthorized,
-				"message": "token缺失",
+				"message": missingTokenMsg,
 			})
 			return
 		}
 
-		if _, err := facades.Auth(ctx).Parse(token); err != nil {
-			if errors.Is(err, auth.ErrorTokenExpired) {
-				token, err = facades.Auth(ctx).Refresh()
-				if err != nil {
-					ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
-						"code":    http.StatusUnauthorized,
-						"message": "刷新token过期",
-					})
-					return
-				}
-				token = "Bearer " + token
-			} else {
+		payload, err := facades.Auth(ctx).Parse(token)
 
+		config := facades.Config()
+		sso := config.GetBool("jwt.sso")
+		if sso {
+			cacheToken := facades.Cache().Get(fmt.Sprintf("jwt:user:%s", payload.Key))
+			if cacheToken != nil && cacheToken.(string) != strings.TrimPrefix(token, "Bearer ") {
 				ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
 					"code":    http.StatusUnauthorized,
-					"message": "token过期",
+					"message": ssoMsg,
 				})
 				return
 			}
 		}
 
-		// You can get User in DB and set it to ctx
-
-		//var user models.User
-		//if err := facades.Auth().User(ctx, &user); err != nil {
-		//	ctx.Request().AbortWithStatus(http.StatusUnauthorized)
-		//  return
-		//}
-		//ctx.WithValue("user", user)
+		if err != nil {
+			if errors.Is(err, auth.ErrorTokenExpired) {
+				token, err = facades.Auth(ctx).Refresh()
+				if err != nil {
+					ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
+						"code":    http.StatusUnauthorized,
+						"message": refreshMsg,
+					})
+					return
+				}
+				token = "Bearer " + token
+			} else {
+				ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
+					"code":    http.StatusUnauthorized,
+					"message": expiredMsg,
+				})
+				return
+			}
+		}
 
 		ctx.Response().Header("Authorization", token)
 		ctx.Request().Next()
