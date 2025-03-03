@@ -15,6 +15,7 @@ func Jwt(messageMaps ...map[string]string) contractshttp.Middleware {
 	var (
 		missingTokenMsg = "未携带token"
 		ssoMsg          = "当前账号已在其他地方登录，请重新登录～"
+		parseMsg        = "传入了非法的token内容，解析失败"
 		refreshMsg      = "token续期失败，请重新登录～"
 		expiredMsg      = "token过期，请重新登录～"
 	)
@@ -45,9 +46,17 @@ func Jwt(messageMaps ...map[string]string) contractshttp.Middleware {
 		}
 
 		payload, err := facades.Auth(ctx).Parse(token)
+		if payload == nil || payload.Key == "" {
+			ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
+				"code":    http.StatusUnauthorized,
+				"message": parseMsg,
+			})
+			return
+		}
 
 		config := facades.Config()
 		sso := config.GetBool("jwt.sso")
+
 		if sso {
 			cacheToken := facades.Cache().Get(fmt.Sprintf("jwt:user:%s", payload.Key))
 			if cacheToken != nil && cacheToken.(string) != strings.TrimPrefix(token, "Bearer ") {
