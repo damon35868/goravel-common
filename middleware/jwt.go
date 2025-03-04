@@ -16,7 +16,6 @@ func Jwt(messageMaps ...map[string]string) contractshttp.Middleware {
 		missingTokenMsg = "未携带token"
 		ssoMsg          = "当前账号已在其他地方登录，请重新登录～"
 		parseMsg        = "传入了非法的token内容，解析失败"
-		refreshMsg      = "token续期失败，请重新登录～"
 		expiredMsg      = "token过期，请重新登录～"
 	)
 	if len(messageMaps) > 0 {
@@ -29,9 +28,6 @@ func Jwt(messageMaps ...map[string]string) contractshttp.Middleware {
 		}
 		if msgMap["parseMsg"] != "" {
 			parseMsg = msgMap["parseMsg"]
-		}
-		if msgMap["refreshMsg"] != "" {
-			refreshMsg = msgMap["refreshMsg"]
 		}
 		if msgMap["expiredMsg"] != "" {
 			expiredMsg = msgMap["expiredMsg"]
@@ -49,6 +45,22 @@ func Jwt(messageMaps ...map[string]string) contractshttp.Middleware {
 		}
 
 		payload, err := facades.Auth(ctx).Parse(token)
+		if err != nil {
+			if errors.Is(err, auth.ErrorTokenExpired) {
+				ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
+					"code":    http.StatusUnauthorized,
+					"message": expiredMsg,
+				})
+				return
+			}
+			if errors.Is(err, auth.ErrorInvalidToken) {
+				ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
+					"code":    http.StatusUnauthorized,
+					"message": parseMsg,
+				})
+				return
+			}
+		}
 		if payload == nil || payload.Key == "" {
 			ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
 				"code":    http.StatusUnauthorized,
@@ -71,27 +83,6 @@ func Jwt(messageMaps ...map[string]string) contractshttp.Middleware {
 			}
 		}
 
-		if err != nil {
-			if errors.Is(err, auth.ErrorTokenExpired) {
-				token, err = facades.Auth(ctx).Refresh()
-				if err != nil {
-					ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
-						"code":    http.StatusUnauthorized,
-						"message": refreshMsg,
-					})
-					return
-				}
-				token = "Bearer " + token
-			} else {
-				ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
-					"code":    http.StatusUnauthorized,
-					"message": expiredMsg,
-				})
-				return
-			}
-		}
-
-		ctx.Response().Header("Authorization", token)
 		ctx.Request().Next()
 	}
 }
