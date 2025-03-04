@@ -93,7 +93,7 @@ func SSOLogin(id int64, token string) {
 	config := facades.Config()
 	ssoKey := config.Get("jwt.sso_key")
 	ttl := config.GetInt("jwt.ttl")
-	facades.Cache().Put(ssoKey.(string)+fmt.Sprintf(":%d", id), token, time.Duration(ttl)*time.Second)
+	facades.Cache().Put(ssoKey.(string)+fmt.Sprintf(":%d", id), token, time.Duration(ttl)*time.Minute)
 }
 
 /**

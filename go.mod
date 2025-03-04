@@ -2,7 +2,10 @@ module github.com/damon35868/goravel-common
 
 go 1.23
 
-require github.com/goravel/framework v1.15.4
+require (
+	github.com/goravel/framework v1.15.4
+	gorm.io/gorm v1.25.12
+)
 
 require (
 	atomicgo.dev/cursor v0.2.0 // indirect
@@ -15,6 +18,8 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/lithammer/fuzzysearch v1.1.8 // indirect
 	github.com/magiconair/properties v1.8.9 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
@@ -45,5 +50,4 @@ require (
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/gorm v1.25.12 // indirect
 )

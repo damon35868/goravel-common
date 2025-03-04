@@ -1,16 +1,21 @@
 package common
 
 import (
-	"time"
+	"github.com/goravel/framework/support/carbon"
+	"gorm.io/gorm"
 )
 
 type OrmId struct {
 	ID uint `gorm:"primaryKey" json:"id"`
 }
 type OrmTimestamps struct {
-	CreatedAt *time.Time `json:"createdAt"`
-	UpdatedAt *time.Time `json:"updatedAt"`
+	CreatedAt *carbon.DateTime `gorm:"autoCreateTime;column:created_at" json:"createdAt"`
+	UpdatedAt *carbon.DateTime `gorm:"autoUpdateTime;column:updated_at" json:"updatedAt"`
 }
 type OrmSoftDeletes struct {
-	DeletedAt *time.Time `json:"deletedAt"`
+	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at" json:"-"`
+}
+
+type OrmSoftDeletesShow struct {
+	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at" json:"deletedAt"`
 }
