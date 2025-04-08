@@ -4,6 +4,7 @@ go 1.23
 
 require (
 	github.com/goravel/framework v1.15.4
+	github.com/samber/lo v1.48.0
 	gorm.io/gorm v1.25.12
 )
 

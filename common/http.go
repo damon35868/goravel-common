@@ -58,8 +58,14 @@ func HasNextPage(skip, take, total int64) bool {
  * @param {http.Context} ctx
  * @return {*}
  */
-func GetTokenUserId(ctx http.Context) int64 {
-	idStr, _ := facades.Auth(ctx).ID()
+func GetTokenUserId(ctx http.Context, guards ...string) int64 {
+	config := facades.Config()
+	guard := config.GetString("auth.defaults.guard")
+	if len(guards) > 0 {
+		guard = guards[0]
+	}
+
+	idStr, _ := facades.Auth(ctx).Guard(guard).ID()
 	id, _ := strconv.Atoi(idStr)
 
 	return int64(id)
