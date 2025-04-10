@@ -22,9 +22,6 @@ func Jwt(messageMaps ...map[string]string) contractshttp.Middleware {
 		if msgMap["missingTokenMsg"] != "" {
 			missingTokenMsg = msgMap["missingTokenMsg"]
 		}
-		if msgMap["ssoMsg"] != "" {
-			ssoMsg = msgMap["ssoMsg"]
-		}
 		if msgMap["parseMsg"] != "" {
 			parseMsg = msgMap["parseMsg"]
 		}
