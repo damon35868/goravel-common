@@ -16,7 +16,9 @@ func Jwt(guard string, messageMaps ...map[string]string) contractshttp.Middlewar
 		missingTokenMsg = "未携带token"
 		parseMsg        = "传入了非法的token内容，解析失败"
 		expiredMsg      = "token过期，请重新登录～"
+		guardMsg        = "该token非当前守卫"
 	)
+
 	if len(messageMaps) > 0 {
 		msgMap := messageMaps[0]
 		if msgMap["missingTokenMsg"] != "" {
@@ -27,6 +29,9 @@ func Jwt(guard string, messageMaps ...map[string]string) contractshttp.Middlewar
 		}
 		if msgMap["expiredMsg"] != "" {
 			expiredMsg = msgMap["expiredMsg"]
+		}
+		if msgMap["guardMsg"] != "" {
+			guardMsg = msgMap["guardMsg"]
 		}
 	}
 
@@ -40,7 +45,15 @@ func Jwt(guard string, messageMaps ...map[string]string) contractshttp.Middlewar
 			return
 		}
 
-		payload, err := facades.Auth(ctx).Guard(guard).Parse(token)
+		payload, err := facades.Auth(ctx).Parse(token)
+		if payload.Guard != guard {
+			ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
+				"code":    http.StatusUnauthorized,
+				"message": guardMsg,
+			})
+			return
+		}
+
 		if err != nil {
 			if errors.Is(err, auth.ErrorTokenExpired) {
 				ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
@@ -75,7 +88,9 @@ func JwtWithSSO(guard string, messageMaps ...map[string]string) contractshttp.Mi
 		ssoMsg          = "当前账号已在其他地方登录，请重新登录～"
 		parseMsg        = "传入了非法的token内容，解析失败"
 		expiredMsg      = "token过期，请重新登录～"
+		guardMsg        = "该token非当前守卫"
 	)
+
 	if len(messageMaps) > 0 {
 		msgMap := messageMaps[0]
 		if msgMap["missingTokenMsg"] != "" {
@@ -90,6 +105,9 @@ func JwtWithSSO(guard string, messageMaps ...map[string]string) contractshttp.Mi
 		if msgMap["expiredMsg"] != "" {
 			expiredMsg = msgMap["expiredMsg"]
 		}
+		if msgMap["guardMsg"] != "" {
+			guardMsg = msgMap["guardMsg"]
+		}
 	}
 
 	return func(ctx contractshttp.Context) {
@@ -102,7 +120,15 @@ func JwtWithSSO(guard string, messageMaps ...map[string]string) contractshttp.Mi
 			return
 		}
 
-		payload, err := facades.Auth(ctx).Guard(guard).Parse(token)
+		payload, err := facades.Auth(ctx).Parse(token)
+		if payload.Guard != guard {
+			ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
+				"code":    http.StatusUnauthorized,
+				"message": guardMsg,
+			})
+			return
+		}
+
 		if err != nil {
 			if errors.Is(err, auth.ErrorTokenExpired) {
 				ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
