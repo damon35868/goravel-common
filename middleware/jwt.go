@@ -11,7 +11,7 @@ import (
 	"github.com/goravel/framework/facades"
 )
 
-func Jwt(messageMaps ...map[string]string) contractshttp.Middleware {
+func Jwt(guard string, messageMaps ...map[string]string) contractshttp.Middleware {
 	var (
 		missingTokenMsg = "未携带token"
 		parseMsg        = "传入了非法的token内容，解析失败"
@@ -40,7 +40,7 @@ func Jwt(messageMaps ...map[string]string) contractshttp.Middleware {
 			return
 		}
 
-		payload, err := facades.Auth(ctx).Parse(token)
+		payload, err := facades.Auth(ctx).Guard(guard).Parse(token)
 		if err != nil {
 			if errors.Is(err, auth.ErrorTokenExpired) {
 				ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
@@ -69,7 +69,7 @@ func Jwt(messageMaps ...map[string]string) contractshttp.Middleware {
 	}
 }
 
-func JwtWithSSO(messageMaps ...map[string]string) contractshttp.Middleware {
+func JwtWithSSO(guard string, messageMaps ...map[string]string) contractshttp.Middleware {
 	var (
 		missingTokenMsg = "未携带token"
 		ssoMsg          = "当前账号已在其他地方登录，请重新登录～"
@@ -102,7 +102,7 @@ func JwtWithSSO(messageMaps ...map[string]string) contractshttp.Middleware {
 			return
 		}
 
-		payload, err := facades.Auth(ctx).Parse(token)
+		payload, err := facades.Auth(ctx).Guard(guard).Parse(token)
 		if err != nil {
 			if errors.Is(err, auth.ErrorTokenExpired) {
 				ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
