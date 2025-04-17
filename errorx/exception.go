@@ -30,17 +30,14 @@ func HttpException(ctx http.Context, errCode int, msgs ...string) http.Response 
  * @param {...string} msgs
  * @return {*}
  */
-func HttpExceptionAbortable(ctx http.Context, errCode int, msgs ...string) error {
-	code, msg := http.StatusInternalServerError, MapErrMsg(errCode, "未知错误")
-	if errCode != 0 {
-		code = errCode
-	}
-	if len(msgs) > 0 {
-		msg = msgs[0]
+func HttpExceptionAbortable(ctx http.Context, err any, errCodes ...int) error {
+	code, err := http.StatusInternalServerError, err
+	if len(errCodes) > 0 {
+		code = errCodes[0]
 	}
 	return ctx.Response().Status(code).Json(&http.Json{
 		"code":    code,
-		"message": msg,
+		"message": err,
 	}).Abort()
 }
 
