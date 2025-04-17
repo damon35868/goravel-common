@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/goravel/framework/contracts/validation"
 	"github.com/samber/lo"
 )
 
@@ -66,4 +67,26 @@ func TakeRandNum(len int64) string {
 		list = append(list, strconv.FormatInt(nums[0], 10))
 	}
 	return strings.Join(list, "")
+}
+
+func FormatRequest(key string, data validation.Data) error {
+	if val, exist := data.Get(key); exist {
+
+		switch g := val.(type) {
+		case int:
+			return data.Set(key, int64(g))
+		case float64:
+			return data.Set(key, int64(g))
+		case []any:
+			for _, v := range g {
+				switch val := v.(type) {
+				case int:
+					return data.Set(key, int64(val))
+				case float64:
+					return data.Set(key, int64(val))
+				}
+			}
+		}
+	}
+	return nil
 }

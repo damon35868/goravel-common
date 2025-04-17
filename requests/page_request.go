@@ -1,6 +1,7 @@
 package requests
 
 import (
+	"github.com/damon35868/goravel-common/utils"
 	"github.com/goravel/framework/contracts/http"
 	"github.com/goravel/framework/contracts/validation"
 )
@@ -20,8 +21,8 @@ func (r *PageRequest) Filters(ctx http.Context) map[string]string {
 
 func (r *PageRequest) Rules(ctx http.Context) map[string]string {
 	return map[string]string{
-		"page":     "required",
-		"pageSize": "required",
+		"page":     "required|integer",
+		"pageSize": "required|integer",
 	}
 }
 
@@ -34,6 +35,12 @@ func (r *PageRequest) Attributes(ctx http.Context) map[string]string {
 }
 
 func (r *PageRequest) PrepareForValidation(ctx http.Context, data validation.Data) error {
+	if err := utils.FormatRequest("page", data); err != nil {
+		return err
+	}
+	if err := utils.FormatRequest("pageSize", data); err != nil {
+		return err
+	}
 	return nil
 }
 

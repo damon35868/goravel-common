@@ -46,14 +46,6 @@ func Jwt(guard string, messageMaps ...map[string]string) contractshttp.Middlewar
 		}
 
 		payload, err := facades.Auth(ctx).Parse(token)
-		if payload.Guard != guard {
-			ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
-				"code":    http.StatusUnauthorized,
-				"message": guardMsg,
-			})
-			return
-		}
-
 		if err != nil {
 			if errors.Is(err, auth.ErrorTokenExpired) {
 				ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
@@ -74,6 +66,13 @@ func Jwt(guard string, messageMaps ...map[string]string) contractshttp.Middlewar
 			ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
 				"code":    http.StatusUnauthorized,
 				"message": parseMsg,
+			})
+			return
+		}
+		if payload.Guard != guard {
+			ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
+				"code":    http.StatusUnauthorized,
+				"message": guardMsg,
 			})
 			return
 		}
@@ -121,14 +120,6 @@ func JwtWithSSO(guard string, messageMaps ...map[string]string) contractshttp.Mi
 		}
 
 		payload, err := facades.Auth(ctx).Parse(token)
-		if payload.Guard != guard {
-			ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
-				"code":    http.StatusUnauthorized,
-				"message": guardMsg,
-			})
-			return
-		}
-
 		if err != nil {
 			if errors.Is(err, auth.ErrorTokenExpired) {
 				ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
@@ -149,6 +140,13 @@ func JwtWithSSO(guard string, messageMaps ...map[string]string) contractshttp.Mi
 			ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
 				"code":    http.StatusUnauthorized,
 				"message": parseMsg,
+			})
+			return
+		}
+		if payload.Guard != guard {
+			ctx.Request().AbortWithStatusJson(http.StatusUnauthorized, &contractshttp.Json{
+				"code":    http.StatusUnauthorized,
+				"message": guardMsg,
 			})
 			return
 		}
