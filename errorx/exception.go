@@ -24,6 +24,27 @@ func HttpException(ctx http.Context, errCode int, msgs ...string) http.Response 
 }
 
 /**
+ * @description: http异常 - 中断
+ * @param {http.Context} ctx
+ * @param {int} errCode
+ * @param {...string} msgs
+ * @return {*}
+ */
+func HttpExceptionAbortable(ctx http.Context, errCode int, msgs ...string) error {
+	code, msg := http.StatusInternalServerError, MapErrMsg(errCode, "未知错误")
+	if errCode != 0 {
+		code = errCode
+	}
+	if len(msgs) > 0 {
+		msg = msgs[0]
+	}
+	return ctx.Response().Status(code).Json(&http.Json{
+		"code":    code,
+		"message": msg,
+	}).Abort()
+}
+
+/**
  * @description: http异常并输出数据
  * @param {http.Context} ctx
  * @param {int} errCode
