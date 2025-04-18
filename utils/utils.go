@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/goravel/framework/contracts/validation"
+	"github.com/goravel/framework/facades"
 	"github.com/samber/lo"
 )
 
@@ -89,4 +90,18 @@ func FormatRequest(key string, data validation.Data) error {
 		}
 	}
 	return nil
+}
+
+func CacheRemember[T any](cacheKey string, val any, ttls ...time.Duration) *T {
+	ttl := 24 * time.Hour
+	if len(ttls) > 0 {
+		ttl = ttls[0]
+	}
+	data, _ := facades.Cache().Remember(cacheKey, ttl, func() (any, error) {
+		return MarshalStr(val), nil
+	})
+
+	var res T
+	json.Unmarshal([]byte(data.(string)), &res)
+	return &res
 }
