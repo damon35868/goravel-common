@@ -92,16 +92,20 @@ func FormatRequest(key string, data validation.Data) error {
 	return nil
 }
 
-func CacheRemember[T any](cacheKey string, val any, ttls ...time.Duration) *T {
+func CacheRemember[T any](cacheKey string, dataAction func() (*T, error), ttls ...time.Duration) (*T, error) {
 	ttl := 24 * time.Hour
 	if len(ttls) > 0 {
 		ttl = ttls[0]
 	}
-	data, _ := facades.Cache().Remember(cacheKey, ttl, func() (any, error) {
-		return MarshalStr(val), nil
+	data, err := facades.Cache().Remember(cacheKey, ttl, func() (any, error) {
+		val, err := dataAction()
+		return MarshalStr(val), err
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	var res T
 	json.Unmarshal([]byte(data.(string)), &res)
-	return &res
+	return &res, nil
 }
